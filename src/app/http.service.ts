@@ -15,7 +15,7 @@ export class HttpService {
 
   public query(question: string): Observable<string> {
     const url = this.baseUrl + '/search/';
-    const params = new HttpParams().set('question', question);
+    const params = new HttpParams().set('question', encodeURIComponent(question));
     const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
     return this.http.get<string>(url, {headers: headers, params: params})
       .pipe(catchError(this.handleError<string>('query', '')));
@@ -23,7 +23,7 @@ export class HttpService {
 
   public getUrl(name: string): Observable<string> {
     const url_ = this.baseUrl + '/getUrl/';
-    const params = new HttpParams().set('name', name);
+    const params = new HttpParams().set('name', encodeURIComponent(name));
     const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
     return this.http.get<string>(url_, {headers: headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
@@ -31,19 +31,28 @@ export class HttpService {
 
   public getName(url: string): Observable<string> {
     const url_ = this.baseUrl + '/getName/';
-    const params = new HttpParams().set('url', url);
+    const params = new HttpParams().set('url', encodeURIComponent(url));
     const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
     return this.http.get<string>(url_, {headers: headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
 
-  public getRelationTo(subject: string): Observable<string> {
+  public getRelationTo(subject: string): Observable<any> {
     const url_ = this.baseUrl + '/relationTo/';
-    const params = new HttpParams().set('subject', subject);
+    const params = new HttpParams().set('subject', encodeURIComponent(subject));
     const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
     return this.http.get<string>(url_, {headers: headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
+
+  public getRelationFrom(object: string): Observable<any> {
+    const url_ = this.baseUrl + '/relationFrom/';
+    const params = new HttpParams().set('object', encodeURIComponent(object));
+    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
+    return this.http.get<string>(url_, {headers: headers, params: params})
+      .pipe(catchError(this.handleError<string>('request', '')));
+  }
+
 
 
   /**
