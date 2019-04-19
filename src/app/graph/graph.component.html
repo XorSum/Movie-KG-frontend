@@ -1,32 +1,38 @@
-<form action="#">
-  <input type="text" [(ngModel)]="url" name="url">
-  <button (click)="extend(this.url)"> extend</button>
-  <button (click)="refresh()"> refresh</button>
+<div *ngIf="entitys.size; else startTemp">
+
+  <div echarts
+       [options]="chartOption"
+       class="chart"
+       (chartClick)="onChartClick($event)"
+       (chartInit)="onChartInit($event)">
+  </div>
+
+</div>
+
+<ng-template #startTemp>
+
+  <form action="#">
+    <input type="text" [(ngModel)]="name" name="name">
+    <button (click)="start()"> 开始</button>
+  </form>
+</ng-template>
 
 
-</form>
+<!--<p>rdfs:</p>-->
+<!--<table>-->
+<!--<tr *ngFor="let r of rdfs">-->
+<!--<th> {{r.subject}}</th>-->
+<!--<th>{{r.predicate}}</th>-->
+<!--<th>{{r.object}}</th>-->
+<!--</tr>-->
+<!--</table>-->
 
-<div echarts
-     [options]="chartOption"
-     class="chart"
-     (chartClick)="onChartClick($event)"
-     (chartInit)="onChartInit($event)"></div>
-
-<p>rdfs:</p>
-<table>
-  <tr *ngFor="let r of rdfs">
-    <th> {{r.subject}}</th>
-    <th>{{r.predicate}}</th>
-    <th>{{r.object}}</th>
-  </tr>
-</table>
-
-<p>entitys:</p>
-<table>
-  <tr *ngFor=" let item of entitys | keyvalue">
-    <th> {{item.key}}</th>
-    <th>{{item.value}}</th>
-  </tr>
-</table>
+<!--<p>entitys:</p>-->
+<!--<table>-->
+<!--<tr *ngFor=" let item of entitys | keyvalue">-->
+<!--<th> {{item.key}}</th>-->
+<!--<th>{{item.value}}</th>-->
+<!--</tr>-->
+<!--</table>-->
 
 

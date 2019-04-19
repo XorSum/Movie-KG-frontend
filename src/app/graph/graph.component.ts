@@ -15,7 +15,7 @@ export class GraphComponent implements OnInit {
 
   entitys: Map<string, string> = new Map<string, string>();
 
-  url: string;
+  name: string = '功夫';
 
   nodes: object[] = [];
 
@@ -88,6 +88,16 @@ export class GraphComponent implements OnInit {
   }
 
   // url = http://editme.top#movie/13688
+
+  public start() {
+    console.log(this.name);
+    this.httpService.getUrl(this.name)
+      .subscribe(url => {
+        console.log(url);
+        this.extend(url);
+      });
+  }
+
 
   public extend(url) {
     this.extendFrom(url);
