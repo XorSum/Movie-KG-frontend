@@ -2,7 +2,9 @@ import {Component, OnInit} from '@angular/core';
 import {HttpService} from '../http.service';
 import {Rdf} from '../rdf';
 import {map} from 'rxjs/operators';
-
+import {GraphNode} from './GraphNode';
+import {GraphEdge} from './GraphEdge';
+import {environment} from '../../environments/environment';
 
 @Component({
   selector: 'app-graph',
@@ -13,17 +15,19 @@ export class GraphComponent implements OnInit {
 
   rdfs: Set<Rdf> = new Set<Rdf>();
 
+  rdf_prefix = environment.rdf_prefix;
+
   entitys: Map<string, string> = new Map<string, string>();
 
-  name: string = '功夫';
+  startName = '功夫';
 
-  nodes: object[] = [];
+  nodes: GraphNode[] = [];
 
-  edges: object[] = [];
+  edges: GraphEdge[] = [];
 
   echartsIntance = null; // 图表
 
-  shouldRedresh = true;
+  shouldRefresh = true;
 
   public chartOption = {
     backgroundColor: '#2c343c',
@@ -40,6 +44,10 @@ export class GraphComponent implements OnInit {
     series: [{
       type: 'graph',
       layout: 'force',
+      roam: true,
+      data: this.nodes,
+      edges: this.edges,
+      categories: undefined,
       animation: true,
       label: {
         normal: {
@@ -54,9 +62,6 @@ export class GraphComponent implements OnInit {
         repulsion: 200,
         edgeLength: 500
       },
-      roam: true,
-      data: this.nodes,
-      edges: this.edges
     }]
   };
 
@@ -68,20 +73,25 @@ export class GraphComponent implements OnInit {
   }
 
   onChartClick(ec) {
-    console.log(ec.data);
     if (ec.data.id !== undefined) {
-      console.log('node');
+      // 判断是node还是edge, 是node则扩展它的关系
       this.extend(ec.data.id);
-    } else {
-      console.log('link');
     }
   }
 
   onChartInit(ec) {
     this.echartsIntance = ec;
+    var categories = [];
+    for (var i = 0; i < 10; i++) {
+      categories[i] = {
+        name: '类型' + i
+      };
+    }
+    this.chartOption.series[0].categories = categories;
+
     setInterval(() => {
-      if (this.shouldRedresh) {
-        this.shouldRedresh = false;
+      if (this.shouldRefresh) {
+        this.shouldRefresh = false;
         this.echartsIntance.setOption(this.chartOption);
       }
     }, 50);
@@ -90,14 +100,11 @@ export class GraphComponent implements OnInit {
   // url = http://editme.top#movie/13688
 
   public start() {
-    console.log(this.name);
-    this.httpService.getUrl(this.name)
+    this.httpService.getUrl(this.startName)
       .subscribe(url => {
-        console.log(url);
         this.extend(url);
       });
   }
-
 
   public extend(url) {
     this.extendFrom(url);
@@ -110,45 +117,27 @@ export class GraphComponent implements OnInit {
 
   addEntity(url: string) {
     if (!this.entitys.has(url)
-      && url.startsWith('http://editme.top#')) {
+      && url.startsWith(this.rdf_prefix)) {
       this.entitys.set(url, 'loading');
-      this.nodes.push({
-        name: 'loading',
-        id: url,
-        clickable: true,
-        draggable: true,
-        category: 'qwe',
-      });
-      const current_index = this.nodes.length - 1;
       this.httpService.getName(url).subscribe(name => {
+          let category = url.slice(this.rdf_prefix.length).split('/')[0];
+          console.log(category);
+          // TODO 不应该使用length
+          this.nodes.push(new GraphNode(name, url, category.length));
           this.entitys.set(url, name);
-          this.nodes[current_index] = {
-            name: name,
-            id: url,
-            clickable: true,
-            draggable: true,
-            category: 'qwe',
-          };
-          this.shouldRedresh = true;
+          this.shouldRefresh = true;
         }
       );
     }
   }
 
   addEdge(subject: string, predicate: string, object: string) {
-    const rdf = new Rdf();
-    rdf.subject = subject;
-    rdf.predicate = predicate;
-    rdf.object = object;
+    const rdf = new Rdf(subject, predicate, object);
     if (!this.rdfs.has(rdf)) {
       this.rdfs.add(rdf);
-      if (subject.startsWith('http://editme.top#') && object.startsWith('http://editme.top#')) {
-        this.edges.push({
-          source: subject,
-          target: object
-        });
-        this.shouldRedresh = true;
-        console.log(this.edges);
+      if (subject.startsWith(this.rdf_prefix) && object.startsWith(this.rdf_prefix)) {
+        this.edges.push(new GraphEdge(subject, object));
+        this.shouldRefresh = true;
       }
     }
   }
