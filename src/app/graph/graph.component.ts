@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {HttpService} from '../http.service';
 import {Rdf} from '../rdf';
-import {tap, map} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 
 
 @Component({
@@ -15,8 +15,6 @@ export class GraphComponent implements OnInit {
 
   entitys: Map<string, string> = new Map<string, string>();
 
-  // nodeId: Map<string, number> = new Map<string, number>();
-
   url: string;
 
   nodes: object[] = [];
@@ -24,6 +22,8 @@ export class GraphComponent implements OnInit {
   edges: object[] = [];
 
   echartsIntance = null; // 图表
+
+  shouldRedresh = true;
 
   public chartOption = {
     backgroundColor: '#2c343c',
@@ -40,7 +40,7 @@ export class GraphComponent implements OnInit {
     series: [{
       type: 'graph',
       layout: 'force',
-      // animation: false,
+      animation: true,
       label: {
         normal: {
           show: true,
@@ -50,9 +50,9 @@ export class GraphComponent implements OnInit {
       },
       force: {
         initLayout: 'circular',
-        gravity: 2,
-        repulsion: 20,
-        edgeLength: 5
+        gravity: 0,
+        repulsion: 200,
+        edgeLength: 500
       },
       roam: true,
       data: this.nodes,
@@ -69,15 +69,22 @@ export class GraphComponent implements OnInit {
 
   onChartClick(ec) {
     console.log(ec.data);
-    if (ec.data.id != undefined) {
+    if (ec.data.id !== undefined) {
       console.log('node');
       this.extend(ec.data.id);
     } else {
       console.log('link');
     }
   }
+
   onChartInit(ec) {
     this.echartsIntance = ec;
+    setInterval(() => {
+      if (this.shouldRedresh) {
+        this.shouldRedresh = false;
+        this.echartsIntance.setOption(this.chartOption);
+      }
+    }, 50);
   }
 
   // url = http://editme.top#movie/13688
@@ -88,8 +95,6 @@ export class GraphComponent implements OnInit {
   }
 
   public refresh() {
-    this.chartOption.series[0].data = this.nodes;
-    this.chartOption.series[0].edges = this.edges;
     this.echartsIntance.setOption(this.chartOption);
   }
 
@@ -98,8 +103,6 @@ export class GraphComponent implements OnInit {
       && url.startsWith('http://editme.top#')) {
       this.entitys.set(url, 'loading');
       this.nodes.push({
-        x: 0,
-        y: 0,
         name: 'loading',
         id: url,
         clickable: true,
@@ -110,22 +113,20 @@ export class GraphComponent implements OnInit {
       this.httpService.getName(url).subscribe(name => {
           this.entitys.set(url, name);
           this.nodes[current_index] = {
-            x: 0,
-            y: 0,
             name: name,
             id: url,
             clickable: true,
             draggable: true,
             category: 'qwe',
           };
-          this.echartsIntance.setOption(this.chartOption);
+          this.shouldRedresh = true;
         }
       );
     }
   }
 
   addEdge(subject: string, predicate: string, object: string) {
-    let rdf = new Rdf();
+    const rdf = new Rdf();
     rdf.subject = subject;
     rdf.predicate = predicate;
     rdf.object = object;
@@ -136,7 +137,7 @@ export class GraphComponent implements OnInit {
           source: subject,
           target: object
         });
-        this.echartsIntance.setOption(this.chartOption);
+        this.shouldRedresh = true;
         console.log(this.edges);
       }
     }
@@ -159,7 +160,7 @@ export class GraphComponent implements OnInit {
   public extendFrom(object) {
     this.httpService.getRelationFrom(object)
       .subscribe(res => {
-        let bindings = res.results.bindings;
+        const bindings = res.results.bindings;
         this.addEntity(object);
         bindings.forEach(x => {
           this.addEntity(x.subject.value);
