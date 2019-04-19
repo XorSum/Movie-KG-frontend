@@ -8,7 +8,7 @@ import {HttpService} from '../http.service';
 })
 export class SearchComponent implements OnInit {
 
-  question: string;
+  question = '周星驰的简介';
   answer: string;
 
   constructor(private httpService: HttpService) {

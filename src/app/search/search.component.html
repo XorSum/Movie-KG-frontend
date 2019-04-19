@@ -1,7 +1,23 @@
-<div>
-  <form action="#">
-    <input type="text" [(ngModel)]="question" name="question">
-    <button (click)="query()">ask</button>
-  </form>
-  <p>{{answer}}</p>
+<div class="box3">
+  <div class="wrp3">
+    <form action="#" class="mid">
+
+      <nz-input-group nzSearch nzSize="large" [nzAddOnAfter]="suffixButton">
+
+        <input nz-input type="text" [(ngModel)]="question" name="question">
+
+      </nz-input-group>
+
+      <ng-template #suffixButton>
+
+        <button nz-button nzType="primary" nzSize="large" nzSearch (click)="query()" >Search</button>
+
+      </ng-template>
+
+    </form>
+
+    <br>
+
+    <p>{{answer}}</p>
+  </div>
 </div>

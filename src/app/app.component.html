@@ -1,18 +1,24 @@
 <!--The content below is only a placeholder and can be replaced.-->
 <!--<div style="text-align:center">-->
-  <!--<h1>-->
-    <!--Welcome to {{ title }}!-->
-  <!--</h1>-->
+<!--<h1>-->
+<!--Welcome to {{ title }}!-->
+<!--</h1>-->
 <!--</div>-->
 
-<nav>
-  <a routerLink="/search"> 智能问答 </a>
-  <span>          </span>
-  <a routerLink="/graph"> 知识图谱 </a>
-</nav>
-
-<router-outlet></router-outlet>
-
+<nz-layout>
+  <nz-header>
+    <div class="logo"></div>
+    <ul nz-menu [nzTheme]="'dark'" [nzMode]="'horizontal'" style="line-height: 64px;">
+      <!--<li nz-menu-item>  </li>-->
+      <li nz-menu-item>  <a routerLink="/search"> 智能问答 </a> </li>
+      <li nz-menu-item>   <a routerLink="/graph"> 知识图谱 </a> </li>
+    </ul>
+  </nz-header>
+  <nz-content>
+    <router-outlet></router-outlet>
+  </nz-content>
+  <nz-footer></nz-footer>
+</nz-layout>
 
 
 <!--<span>&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;</span>-->

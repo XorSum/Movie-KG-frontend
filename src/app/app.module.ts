@@ -7,6 +7,12 @@ import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {SearchComponent} from './search/search.component';
 import {GraphComponent} from './graph/graph.component';
+import { NgZorroAntdModule, NZ_I18N, zh_CN } from 'ng-zorro-antd';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { registerLocaleData } from '@angular/common';
+import zh from '@angular/common/locales/zh';
+
+registerLocaleData(zh);
 
 @NgModule({
   declarations: [
@@ -20,8 +26,10 @@ import {GraphComponent} from './graph/graph.component';
     FormsModule,
     HttpClientModule,
     NgxEchartsModule,
+    NgZorroAntdModule,
+    BrowserAnimationsModule,
   ],
-  providers: [],
+  providers: [{ provide: NZ_I18N, useValue: zh_CN }],
   bootstrap: [AppComponent]
 })
 export class AppModule {
