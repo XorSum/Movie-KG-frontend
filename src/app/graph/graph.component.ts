@@ -1,7 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {HttpService} from '../http.service';
-import {Rdf} from '../rdf';
+
 import {map} from 'rxjs/operators';
+import {RawData} from '../raw-data';
+import {GraphNode} from './graph-node';
 
 
 @Component({
@@ -11,19 +13,19 @@ import {map} from 'rxjs/operators';
 })
 export class GraphComponent implements OnInit {
 
-  rdfs: Set<Rdf> = new Set<Rdf>();
+  rawDatas: RawData[] = [];
 
-  entitys: Map<string, string> = new Map<string, string>();
+  name = '功夫';
 
-  name: string = '功夫';
-
-  nodes: object[] = [];
+  nodes: GraphNode[] = [];
 
   edges: object[] = [];
 
   echartsIntance = null; // 图表
 
-  shouldRedresh = true;
+  shouldRefresh = true;
+
+  shouldDrew = false;
 
   public chartOption = {
     backgroundColor: '#2c343c',
@@ -44,7 +46,7 @@ export class GraphComponent implements OnInit {
       label: {
         normal: {
           show: true,
-          position: 'right',
+          position: 'inside',
           formatter: '{b}'
         }
       },
@@ -52,11 +54,11 @@ export class GraphComponent implements OnInit {
         initLayout: 'circular',
         gravity: 0,
         repulsion: 200,
-        edgeLength: 500
+        edgeLength: 200
       },
       roam: true,
       data: this.nodes,
-      edges: this.edges
+      edges: this.edges,
     }]
   };
 
@@ -67,117 +69,123 @@ export class GraphComponent implements OnInit {
   ngOnInit() {
   }
 
+  public refresh() {
+    this.rawDatas.forEach(x => {
+      let flag = true;
+      this.nodes.forEach(y => {
+        if (x._id == y.id) {
+          flag = false;
+        }
+      });
+      if (flag == true) {
+        if (x.title != null) {
+          this.nodes.push(new GraphNode(x._id, x.title, 'movie'));
+        } else {
+          this.nodes.push(new GraphNode(x._id, x.name, 'person'));
+        }
+      }
+      if (x.title != null) {
+        x.casts.forEach(cast => {
+          this.edges.push({
+            source: cast,
+            target: x._id
+          });
+        });
+      } else {
+        x.works.forEach(work => {
+          this.edges.push({source: x._id, target: work.id});
+        });
+      }
+    });
+    console.log(this.nodes);
+    console.log(this.rawDatas);
+    this.echartsIntance.setOption(this.chartOption);
+  }
+
+  onChartInit(ec) {
+    this.echartsIntance = ec;
+    this.echartsIntance.setOption(this.chartOption);
+    setInterval(() => {
+      if (this.shouldRefresh) {
+        this.shouldRefresh = false;
+        this.refresh();
+      }
+    }, 50);
+  }
+
   onChartClick(ec) {
-    console.log(ec.data);
     if (ec.data.id !== undefined) {
-      console.log('node');
-      this.extend(ec.data.id);
+      console.log(ec.data);
+      if (ec.data.category == 'movie') {
+        this.extendMovie(ec.data.id);
+      } else {
+        this.extendPerson(ec.data.id);
+      }
     } else {
       console.log('link');
     }
   }
 
-  onChartInit(ec) {
-    this.echartsIntance = ec;
-    setInterval(() => {
-      if (this.shouldRedresh) {
-        this.shouldRedresh = false;
-        this.echartsIntance.setOption(this.chartOption);
-      }
-    }, 50);
-  }
-
-  // url = http://editme.top#movie/13688
-
   public start() {
-    console.log(this.name);
-    this.httpService.getUrl(this.name)
-      .subscribe(url => {
-        console.log(url);
-        this.extend(url);
-      });
-  }
-
-
-  public extend(url) {
-    this.extendFrom(url);
-    this.extendTo(url);
-  }
-
-  public refresh() {
-    this.echartsIntance.setOption(this.chartOption);
-  }
-
-  addEntity(url: string) {
-    if (!this.entitys.has(url)
-      && url.startsWith('http://editme.top#')) {
-      this.entitys.set(url, 'loading');
-      this.nodes.push({
-        name: 'loading',
-        id: url,
-        clickable: true,
-        draggable: true,
-        category: 'qwe',
-      });
-      const current_index = this.nodes.length - 1;
-      this.httpService.getName(url).subscribe(name => {
-          this.entitys.set(url, name);
-          this.nodes[current_index] = {
-            name: name,
-            id: url,
-            clickable: true,
-            draggable: true,
-            category: 'qwe',
-          };
-          this.shouldRedresh = true;
-        }
-      );
-    }
-  }
-
-  addEdge(subject: string, predicate: string, object: string) {
-    const rdf = new Rdf();
-    rdf.subject = subject;
-    rdf.predicate = predicate;
-    rdf.object = object;
-    if (!this.rdfs.has(rdf)) {
-      this.rdfs.add(rdf);
-      if (subject.startsWith('http://editme.top#') && object.startsWith('http://editme.top#')) {
-        this.edges.push({
-          source: subject,
-          target: object
-        });
-        this.shouldRedresh = true;
-        console.log(this.edges);
+    this.httpService.getMovie(null, this.name).subscribe(res => {
+      // console.log(res);
+      if (res._id != null) {
+        this.extendMovie(res._id);
+        this.shouldDrew = true;
       }
-    }
-  }
-
-  public extendTo(subject) {
-    this.httpService.getRelationTo(subject)
-      .pipe(
-        map(x => x.results.bindings)
-      ).subscribe(bindings => {
-      this.addEntity(subject);
-      bindings.forEach(x => {
-        this.addEntity(x.object.value);
-        this.addEdge(subject, x.predicate.value, x.object.value);
-      });
-      console.log(this.rdfs);
     });
   }
 
-  public extendFrom(object) {
-    this.httpService.getRelationFrom(object)
-      .subscribe(res => {
-        const bindings = res.results.bindings;
-        this.addEntity(object);
-        bindings.forEach(x => {
-          this.addEntity(x.subject.value);
-          this.addEdge(x.subject.value, x.predicate.value, object);
-        });
-        console.log(this.rdfs);
-      });
+  public addNode(node: any) {
+    let flag = false;
+    this.rawDatas.forEach(x => {
+      if (x._id == node._id) {
+        flag = true;
+      }
+    });
+    if (flag == false) {
+      this.rawDatas.push(node);
+    }
   }
 
+
+  public extendPerson(personId: string) {
+    this.httpService.getPerson(personId, null)
+      .subscribe(res => {
+          if (res._id != null) {
+            this.addNode(res);
+            res.works.forEach(x => {
+              this.httpService.getMovie(x.id, null)
+                .subscribe(movie => {
+                  if (movie._id != null) {
+                    this.addNode(movie);
+                    this.shouldRefresh = true;
+                  }
+                });
+            });
+          }
+        }
+      );
+  }
+
+  public extendMovie(movieId: string) {
+    this.httpService.getMovie(movieId, null)
+      .subscribe(res => {
+          if (res._id != null) {
+            // console.log(res);
+            this.addNode(res);
+            res.casts.forEach(x => {
+              // console.log(x);
+              this.httpService.getPerson(x, null)
+                .subscribe(person => {
+                  if (person._id != null) {
+                    this.addNode(person);
+                    this.shouldRefresh = true;
+                  }
+                });
+            });
+          }
+        }
+      );
+  }
 }

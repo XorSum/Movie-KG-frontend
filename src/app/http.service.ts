@@ -3,12 +3,14 @@ import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {environment} from '../environments/environment';
 import {Observable, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
+import {RawData} from './raw-data';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HttpService {
   private baseUrl = environment.baseUrl;
+  private headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
 
   constructor(private http: HttpClient) {
   }
@@ -16,43 +18,62 @@ export class HttpService {
   public query(question: string): Observable<string> {
     const url = this.baseUrl + '/search/';
     const params = new HttpParams().set('question', encodeURIComponent(question));
-    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
-    return this.http.get<string>(url, {headers: headers, params: params})
+    return this.http.get<string>(url, {headers: this.headers, params: params})
       .pipe(catchError(this.handleError<string>('query', '')));
   }
 
   public getUrl(name: string): Observable<string> {
     const url_ = this.baseUrl + '/getUrl/';
     const params = new HttpParams().set('name', encodeURIComponent(name));
-    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
-    return this.http.get<string>(url_, {headers: headers, params: params})
+    return this.http.get<string>(url_, {headers: this.headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
 
   public getName(url: string): Observable<string> {
     const url_ = this.baseUrl + '/getName/';
     const params = new HttpParams().set('url', encodeURIComponent(url));
-    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
-    return this.http.get<string>(url_, {headers: headers, params: params})
+    return this.http.get<string>(url_, {headers: this.headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
 
   public getRelationTo(subject: string): Observable<any> {
     const url_ = this.baseUrl + '/relationTo/';
     const params = new HttpParams().set('subject', encodeURIComponent(subject));
-    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
-    return this.http.get<string>(url_, {headers: headers, params: params})
+    return this.http.get<string>(url_, {headers: this.headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
 
   public getRelationFrom(object: string): Observable<any> {
     const url_ = this.baseUrl + '/relationFrom/';
     const params = new HttpParams().set('object', encodeURIComponent(object));
-    const headers: HttpHeaders = new HttpHeaders({'Content-type': 'application/x-www-form-urlencoded; charset=utf-8'});
-    return this.http.get<string>(url_, {headers: headers, params: params})
+    return this.http.get<string>(url_, {headers: this.headers, params: params})
       .pipe(catchError(this.handleError<string>('request', '')));
   }
 
+
+  public getMovie(id: string | null, title: string | null): Observable<RawData> {
+    const url = this.baseUrl + '/api/v3/movie/';
+    let params = new HttpParams();
+    if (id != null) {
+      params = params.set('id', id);
+    }
+    if (title != null) {
+      params = params.set('title', title);
+    }
+   return this.http.get<RawData>(url, {headers: this.headers, params: params});
+  }
+
+  public getPerson(id: string | null, name: string | null): Observable<RawData> {
+    const url = this.baseUrl + '/api/v3/person/';
+    let params = new HttpParams();
+    if (id != null) {
+      params = params.set('id', id);
+    }
+    if (name != null) {
+      params = params.set('name', name);
+    }
+    return this.http.get<RawData>(url, {headers: this.headers, params: params});
+  }
 
 
   /**

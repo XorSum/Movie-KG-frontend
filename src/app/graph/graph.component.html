@@ -1,4 +1,6 @@
-<div *ngIf="entitys.size; else startTemp" >
+<div *ngIf="shouldDrew; else startTemp">
+
+  <button (click)="refresh()"> refresh</button>
 
   <div echarts
        [options]="chartOption"
@@ -14,7 +16,7 @@
   </div>
 </div>
 
-<ng-template #startTemp >
+<ng-template #startTemp>
 
   <div class="box3">
     <div class="wrp3">
