@@ -136,7 +136,7 @@ export class GraphComponent implements OnInit {
     });
   }
 
-  public addNode(node: any) {
+  public addNode(node: RawData) {
     let flag = false;
     this.rawDatas.forEach(x => {
       if (x._id == node._id) {
